@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Aggregator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-code-branch"></i></div>
+            <h1>Log Aggregator <span class="badge">v2.1</span></h1>
+        </div>
+        <div class="header-actions">
+            <span class="date"><i class="far fa-calendar-alt"></i> <span id="currentDate"></span></span>
+            <div class="avatar" id="avatar" title="Admin">A</div>
+        </div>
+    </header>
+
+    <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+        <button class="tab-btn" data-tab="logs"><i class="fas fa-list"></i> Logs</button>
+        <button class="tab-btn" data-tab="urlstats"><i class="fas fa-link"></i> URL Stats</button>
+        <button class="tab-btn" data-tab="parser"><i class="fas fa-cog"></i> Parser</button>
+    </div>
+
+    <div class="tab-content active" id="tab-dashboard">
+        <div class="card">
+            <h2 style="color:rgba(255,255,255,0.5);font-weight:400;font-size:1.1rem;margin-bottom:1rem;"><i class="fas fa-chart-simple"></i> Статистика</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
+                <div><div style="color:rgba(255,255,255,0.3);font-size:0.7rem;text-transform:uppercase">Всего записей</div><div style="font-size:2rem;font-weight:700;color:#7ca9ff" id="totalEntries">-</div></div>
+                <div><div style="color:rgba(255,255,255,0.3);font-size:0.7rem;text-transform:uppercase">Уникальных IP</div><div style="font-size:2rem;font-weight:700;color:#b48aff" id="uniqueIps">-</div></div>
+                <div><div style="color:rgba(255,255,255,0.3);font-size:0.7rem;text-transform:uppercase">Уникальных URL</div><div style="font-size:2rem;font-weight:700;color:#f0f4ff" id="uniqueUrls">-</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-logs">
+        <div class="card">
+            <div class="filter-grid">
+                <div class="filter-group"><label><i class="fas fa-network-wired"></i> IP</label><input type="text" id="filterIp" placeholder="Введите IP"></div>
+                <div class="filter-group"><label><i class="fas fa-calendar-plus"></i> Дата с</label><input type="date" id="filterDateFrom"></div>
+                <div class="filter-group"><label><i class="fas fa-calendar-minus"></i> Дата по</label><input type="date" id="filterDateTo"></div>
+                <div class="filter-group"><label><i class="fas fa-search"></i> Ключевое слово</label><input type="text" id="filterKeyword" placeholder="URL или User-Agent"></div>
+                <div class="filter-group"><label><i class="fas fa-layer-group"></i> Группировка</label>
+                    <select id="filterGroupBy"><option value="">Нет</option><option value="ip">По IP</option><option value="url">По URL</option><option value="date">По дате</option></select>
+                </div>
+                <div class="filter-group"><label><i class="fas fa-link"></i> URL</label><input type="text" id="filterUrl" placeholder="Точный URL"></div>
+                <button class="btn" id="applyLogsFilter"><i class="fas fa-sliders-h"></i> Применить</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="table-wrapper"><table><thead><tr><th>IP</th><th>Дата</th><th>Метод</th><th>URL</th><th>Статус</th><th>Размер</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;flex-wrap:wrap;gap:0.5rem">
+                <span style="color:rgba(255,255,255,0.3);font-size:0.8rem" id="logsPagination"></span>
+                <div><button class="btn btn-outline" id="logsPrev" style="padding:0.3rem 1rem"><i class="fas fa-chevron-left"></i></button>
+                <button class="btn btn-outline" id="logsNext" style="padding:0.3rem 1rem"><i class="fas fa-chevron-right"></i></button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-urlstats">
+        <div class="card">
+            <div class="table-wrapper"><table><thead><tr><th>URL</th><th style="text-align:center">Количество запросов</th></tr></thead><tbody id="urlStatsBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-parser">
+        <div class="card">
+            <h3 style="color:rgba(255,255,255,0.5);font-weight:400;margin-bottom:1rem;"><i class="fas fa-upload"></i> Управление парсингом</h3>
+            <button class="btn" id="startParseBtn"><i class="fas fa-play"></i> Запустить разбор</button>
+            <div id="parseStatus" style="margin-top:1rem;color:rgba(255,255,255,0.5)"></div>
+            <div class="progress-bar" style="margin-top:0.5rem"><div class="fill" id="parseProgressFill"></div></div>
+            <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:0.5rem">
+                <span style="color:rgba(255,255,255,0.3);font-size:0.8rem">Размер обработанных файлов:</span>
+                <span id="parseFileSize" style="color:#f0f4ff;font-family:monospace">-</span>
+            </div>
+            <div style="margin-top:1rem">
+                <h4 style="color:rgba(255,255,255,0.3);font-weight:400;font-size:0.8rem;text-transform:uppercase;margin-bottom:0.5rem">Список загруженных файлов</h4>
+                <ul id="parsedFilesList" style="list-style:none;color:rgba(255,255,255,0.5);font-size:0.85rem"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note" style="margin-top:2rem;text-align:center;font-size:0.65rem;color:rgba(255,255,255,0.08);letter-spacing:0.04em">
+        <i class="fas fa-shield-alt"></i> защищённое соединение &middot; Apache Log Aggregator
+    </div>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>Вход в систему</h2>
+        <div class="input-wrap"><input type="text" id="loginUsername" placeholder="Имя пользователя" value="admin"></div>
+        <div class="input-wrap"><input type="password" id="loginPassword" placeholder="Пароль" value="admin123"></div>
+        <button class="btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Войти</button>
+        <div style="margin-top:1rem;text-align:center;font-size:0.7rem;color:rgba(255,255,255,0.2)">Тестовый пользователь: admin / admin123</div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
