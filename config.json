@@ -1,0 +1,8 @@
+{
+  "LOG_DIR": "./logs/",
+  "LOG_MASK": "access.log*",
+  "LOG_FORMAT": "combined",
+  "DB_URI": "postgresql://user:password@localhost/logagg",
+  "SECRET_KEY": "your-secret-key-change-me",
+  "PARSE_INTERVAL": 3600
+}
